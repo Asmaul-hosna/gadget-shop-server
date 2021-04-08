@@ -1,7 +1,6 @@
 const express = require('express')
 const app = express()
 const MongoClient = require('mongodb').MongoClient;
-const ObjectID = require('mongodb').ObjectID;
 const cors = require('cors');
 const bodyParser =require('body-parser');
 require('dotenv').config();
@@ -22,23 +21,26 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     console.log('connection err',err)
-  const productCollection = client.db("gadget").collection("products");
-  const orderCollection = client.db("gadget").collection("products");
-
+ 
+    const productCollection = client.db("gadget").collection("products");
+    const orderCollection = client.db("gadget").collection("orders");
+  
   app.get('/products',(req,res)=>{
     productCollection.find()
     .toArray((err,products) => {
       res.send(products)
-      
-
     })
   })
+
+ 
+
+   
   app.get('/product/:id',(req,res)=>{
-    productCollection.find({_id:req.params.id})
+  productCollection.find({_id:req.params.id})
     .toArray((err,products) => {
       res.send(products[0]);
-      console.log(products[0]);
-
+      console.log(products[0])
+     
     })
   })
  
@@ -53,18 +55,35 @@ client.connect(err => {
     })
 
   })
+  app.get("/orders",(req,res)=>{
+    orderCollection.find()
+    .toArray((err,products) => {
+      res.send(products)
+    })
+  
+  })
+ 
+  app.post('/addOrder',(req,res) => {
+    const newOrder = req.body;
+    console.log('adding new order:',newOrder)
+    orderCollection.insertOne(newOrder)
+    .then(result => {
+      console.log('insertedCount',result.insertedCount);
+      res.send(result.insertedCount > 0)
+
+    })
+
+  })
+  app.get("/order/",(req,res)=>{
+    orderCollection.find({email:req.query}).toArray((err,orders)=>{
+      res.send(orders);
+    })
+  })
+
   
 //   client.close();
 });
-app.post('/addOrder',(req,res) => {
-  const newOrder = req.body;
-  orderCollection.insertOne(newOrder)
-  .then(result => {
-    res.send(result.insertedCount > 0)
-    
-  })
 
-})
 
 
 
