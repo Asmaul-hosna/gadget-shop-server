@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
 const cors = require('cors');
 const bodyParser =require('body-parser');
 require('dotenv').config();
@@ -22,12 +23,21 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
     console.log('connection err',err)
   const productCollection = client.db("gadget").collection("products");
+  const orderCollection = client.db("gadget").collection("products");
 
   app.get('/products',(req,res)=>{
     productCollection.find()
     .toArray((err,products) => {
       res.send(products)
       
+
+    })
+  })
+  app.get('/product/:id',(req,res)=>{
+    productCollection.find({_id:req.params.id})
+    .toArray((err,products) => {
+      res.send(products[0]);
+      console.log(products[0]);
 
     })
   })
@@ -43,8 +53,19 @@ client.connect(err => {
     })
 
   })
+  
 //   client.close();
 });
+app.post('/addOrder',(req,res) => {
+  const newOrder = req.body;
+  orderCollection.insertOne(newOrder)
+  .then(result => {
+    res.send(result.insertedCount > 0)
+    
+  })
+
+})
+
 
 
 app.listen(port, () => {
